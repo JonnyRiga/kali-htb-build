@@ -1,0 +1,24 @@
+---
+# Role: terminal — deploy QTerminal preset
+
+- name: "Create QTerminal config directory"
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/qterminal.org"
+    state: directory
+    mode: '0755'
+
+- name: "Deploy QTerminal configuration"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/qterminal.ini"
+    dest: "{{ user_home }}/.config/qterminal.org/qterminal.ini"
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+    mode: '0644'
+
+- name: "Deploy QTerminal bookmarks"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/qterminal_bookmarks.xml"
+    dest: "{{ user_home }}/.config/qterminal.org/qterminal_bookmarks.xml"
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+    mode: '0644'
