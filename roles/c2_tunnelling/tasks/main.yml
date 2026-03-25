@@ -21,7 +21,10 @@
 - name: "Download chisel windows amd64"
   ansible.builtin.shell: |
     LATEST=$(curl -s https://api.github.com/repos/jpillora/chisel/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-    curl -sL "https://github.com/jpillora/chisel/releases/download/v${LATEST}/chisel_${LATEST}_windows_amd64.gz" | gunzip > {{ opt_dir }}/chisel/chisel_windows.exe
+    curl -sL "https://github.com/jpillora/chisel/releases/download/v${LATEST}/chisel_${LATEST}_windows_amd64.zip" -o /tmp/chisel_win.zip
+    unzip -o /tmp/chisel_win.zip -d {{ opt_dir }}/chisel/
+    mv {{ opt_dir }}/chisel/chisel.exe {{ opt_dir }}/chisel/chisel_windows.exe 2>/dev/null || true
+    rm -f /tmp/chisel_win.zip
   args:
     creates: "{{ opt_dir }}/chisel/chisel_windows.exe"
   become: yes
@@ -89,6 +92,7 @@
   community.general.pipx:
     name: pwncat-cs
     state: latest
+    executable: "{{ pipx_executable }}"
   environment:
     PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
 

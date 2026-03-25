@@ -41,13 +41,13 @@
   become: yes
 
 # --- Burp CA cert ---
-# Isolated behind `burp_cert` tag. Requires Burp Suite running on :8080.
-# Run separately: ansible-playbook site.yml --tags burp_cert -K
+# Only runs when install_burp_cert=true (Burp must be running on :8080).
+# Usage: ansible-playbook site.yml --tags browser -e install_burp_cert=true -K
 - name: "Check if BurpSuiteCA.der already exists"
   ansible.builtin.stat:
     path: /usr/local/share/ca-certificates/BurpSuiteCA.der
-  register: burp_cert
-  tags: ['burp_cert', 'never']
+  register: burp_cert_file
+  when: install_burp_cert | default(false) | bool
 
 - name: "Download Burp CA cert (Burp must be running on :8080)"
   ansible.builtin.get_url:
@@ -55,11 +55,13 @@
     dest: /usr/local/share/ca-certificates/BurpSuiteCA.der
     mode: '0644'
   become: yes
-  when: not burp_cert.stat.exists
-  tags: ['burp_cert', 'never']
+  when:
+    - install_burp_cert | default(false) | bool
+    - not (burp_cert_file.stat.exists | default(false))
 
 - name: "Update CA certificates after Burp cert install"
   ansible.builtin.command: update-ca-certificates
   become: yes
-  when: not burp_cert.stat.exists
-  tags: ['burp_cert', 'never']
+  when:
+    - install_burp_cert | default(false) | bool
+    - not (burp_cert_file.stat.exists | default(false))

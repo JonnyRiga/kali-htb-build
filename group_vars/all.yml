@@ -22,5 +22,8 @@ bloodhound_port: 8088
 # Laurel version
 laurel_version: "0.6.4"
 
+# pipx executable (system-installed, NOT the one inside Ansible's venv)
+pipx_executable: "/usr/bin/pipx"
+
 # Distribution codename for Docker repo (Kali maps to Debian bookworm)
 docker_distribution: "bookworm"
