@@ -29,7 +29,6 @@
     cd {{ user_home }}/pwndbg && ./setup.sh
   args:
     creates: "{{ user_home }}/pwndbg/.venv"
-  when: pwndbg_clone.changed or not pwndbg_clone.stat is defined
 
 # --- Chainsaw ---
 - name: "Download and extract Chainsaw"

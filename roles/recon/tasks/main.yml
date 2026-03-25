@@ -12,7 +12,7 @@
       - enum4linux
       - enum4linux-ng
       - smbmap
-      - ldapdomaindump
+      - python3-ldapdomaindump
       - dnsrecon
       - dnsenum
       - whatweb
