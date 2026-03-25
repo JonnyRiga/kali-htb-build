@@ -1,0 +1,49 @@
+---
+# Role: base — core packages that should be present on every Kali build
+
+- name: "Install core packages"
+  ansible.builtin.apt:
+    name:
+      - jq
+      - pipx
+      - ntpdate
+      - flameshot
+      - libimage-exiftool-perl   # exiftool
+      - rsyslog
+      - ca-certificates
+      - curl
+      - gh
+      - git
+      - wget
+      - unzip
+      - p7zip-full
+      - python3-pip
+      - python3-venv
+      - golang-go
+      - tmux
+      - zsh
+      - vim
+      - neovim
+    state: present
+  become: yes
+
+- name: "Ensure pipx path is configured for user"
+  ansible.builtin.command:
+    cmd: pipx ensurepath
+  changed_when: false
+
+- name: "Set GOPATH in user profile"
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.zshrc"
+    regexp: '^export GOPATH='
+    line: 'export GOPATH="{{ gopath }}"'
+    create: yes
+  tags: shell_config
+
+- name: "Add GOPATH/bin to PATH in user profile"
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.zshrc"
+    regexp: '^export PATH=.*GOPATH'
+    line: 'export PATH="$PATH:{{ gopath_bin }}"'
+    create: yes
+  tags: shell_config

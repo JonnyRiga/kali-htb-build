@@ -1,0 +1,23 @@
+---
+# Role: recon — network scanning, fuzzing, enumeration tools
+
+- name: "Install recon tools via apt"
+  ansible.builtin.apt:
+    name:
+      - nmap
+      - ffuf
+      - feroxbuster
+      - gobuster
+      - wfuzz
+      - enum4linux
+      - enum4linux-ng
+      - smbmap
+      - ldapdomaindump
+      - dnsrecon
+      - dnsenum
+      - whatweb
+      - wafw00f
+      - nikto
+      - masscan
+    state: present
+  become: yes

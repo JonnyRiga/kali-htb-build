@@ -1,0 +1,11 @@
+# Laurel configuration
+# See https://github.com/threathunters-io/laurel
+
+[auditd]
+read-users = [ "_laurel" ]
+
+[output]
+directory = "/var/log/laurel"
+prefix = "audit"
+size = 10000000
+generations = 5

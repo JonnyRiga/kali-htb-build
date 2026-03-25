@@ -1,0 +1,23 @@
+---
+# Role: shell_config — tmux, zsh customization
+# NOTE: parrot-build uses bash + MATE terminal. We adapt for Kali's zsh + XFCE.
+
+- name: "Copy enhanced tmux config"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/.tmux.conf"
+    dest: "{{ user_home }}/.tmux.conf"
+    backup: yes
+
+- name: "Ensure useful zsh aliases exist"
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.zshrc"
+    marker: "# {mark} CUSTOM-KALI-BUILD ALIASES"
+    block: |
+      # Useful aliases
+      alias ll='ls -la'
+      alias la='ls -A'
+      alias serve='python3 -m http.server 80'
+      alias peas='cd /opt/peas'
+      alias sharp='cd /opt/SharpCollection'
+      alias tun0='ip addr show tun0 2>/dev/null | grep "inet " | awk "{print \$2}" | cut -d/ -f1'
+    create: yes

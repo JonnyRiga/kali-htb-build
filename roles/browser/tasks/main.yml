@@ -1,0 +1,65 @@
+---
+# Role: browser — Firefox policies, Burp Suite extras
+
+# --- Firefox extension policies ---
+- name: "Ensure Firefox distribution directory exists"
+  ansible.builtin.file:
+    path: /usr/share/firefox-esr/distribution
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: "Deploy Firefox policies with extension installs"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/policies.json.j2"
+    dest: /usr/share/firefox-esr/distribution/policies.json
+    mode: '0644'
+  become: yes
+
+# --- Burp Suite extras (JRuby / Jython JARs) ---
+- name: "Create BurpSuite extras directory"
+  ansible.builtin.file:
+    path: "{{ burpsuite_extras_dir }}"
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: "Download JRuby JAR for Burp Suite"
+  ansible.builtin.get_url:
+    url: "https://repo1.maven.org/maven2/org/jruby/jruby-complete/9.4.0.0/jruby-complete-9.4.0.0.jar"
+    dest: "{{ burpsuite_extras_dir }}/jruby-complete.jar"
+    checksum: "sha256:e6817cf528976a50a054910f006ee34df07c4580c8a2a4c8c8d61cda0238a108"
+    mode: '0644'
+  become: yes
+
+- name: "Download Jython JAR for Burp Suite"
+  ansible.builtin.get_url:
+    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/2.7.3/jython-standalone-2.7.3.jar"
+    dest: "{{ burpsuite_extras_dir }}/jython-standalone.jar"
+    checksum: "sha256:da7f3d829b148bcfa86b059dc964e3a8556fedb021096c8db07e30c66faab9b4"
+    mode: '0644'
+  become: yes
+
+# --- Burp CA cert ---
+# Isolated behind `burp_cert` tag. Requires Burp Suite running on :8080.
+# Run separately: ansible-playbook site.yml --tags burp_cert -K
+- name: "Check if BurpSuiteCA.der already exists"
+  ansible.builtin.stat:
+    path: /usr/local/share/ca-certificates/BurpSuiteCA.der
+  register: burp_cert
+  tags: ['burp_cert', 'never']
+
+- name: "Download Burp CA cert (Burp must be running on :8080)"
+  ansible.builtin.get_url:
+    url: "http://127.0.0.1:8080/cert"
+    dest: /usr/local/share/ca-certificates/BurpSuiteCA.der
+    mode: '0644'
+  become: yes
+  when: not burp_cert.stat.exists
+  tags: ['burp_cert', 'never']
+
+- name: "Update CA certificates after Burp cert install"
+  ansible.builtin.command: update-ca-certificates
+  become: yes
+  when: not burp_cert.stat.exists
+  tags: ['burp_cert', 'never']

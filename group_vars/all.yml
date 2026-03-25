@@ -1,0 +1,26 @@
+---
+# User home directory
+user_home: "{{ ansible_env.HOME }}"
+local_user: "{{ ansible_user_id }}"
+
+# Go configuration
+go_bin_path: "/usr/local/go/bin"
+gopath: "{{ user_home }}/go"
+gopath_bin: "{{ gopath }}/bin"
+
+# Tool install directories
+opt_dir: "/opt"
+tools_dir: "/opt/tools"
+
+# Burp Suite
+burpsuite_extras_dir: "/usr/local/lib/BurpSuite"
+
+# BloodHound CE
+bloodhound_dir: "/opt/bloodhound"
+bloodhound_port: 8088
+
+# Laurel version
+laurel_version: "0.6.4"
+
+# Distribution codename for Docker repo (Kali maps to Debian bookworm)
+docker_distribution: "bookworm"

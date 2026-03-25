@@ -1,0 +1,103 @@
+---
+# Role: logging — rsyslog, ufw firewall with SYN logging, auditd + laurel
+
+# --- rsyslog ---
+- name: "Ensure rsyslog is installed and enabled"
+  ansible.builtin.service:
+    name: rsyslog
+    enabled: yes
+    state: started
+  become: yes
+
+# --- UFW ---
+- name: "Install ufw"
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  become: yes
+
+- name: "Enable UFW with default allow policy"
+  community.general.ufw:
+    state: enabled
+    policy: allow
+  become: yes
+
+- name: "Log SYN packets in UFW INPUT chain"
+  ansible.builtin.lineinfile:
+    path: /etc/ufw/after.rules
+    line: '-A ufw-after-input -p tcp --syn -j LOG --log-prefix "[UFW-SYN-LOG] "'
+    insertbefore: "# don't delete the 'COMMIT' line or these rules won't be processed"
+  become: yes
+  notify: restart ufw
+
+# --- auditd ---
+- name: "Install auditd"
+  ansible.builtin.apt:
+    name: auditd
+    state: present
+  become: yes
+
+# --- Laurel (audit log enricher) ---
+- name: "Create _laurel user"
+  ansible.builtin.user:
+    name: _laurel
+    state: present
+    shell: /bin/false
+    create_home: no
+    home: /var/log/laurel
+  become: yes
+
+- name: "Create laurel directories"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0750') }}"
+  loop:
+    - { path: "/var/log/laurel", owner: "_laurel", group: "_laurel" }
+    - { path: "/etc/laurel" }
+  become: yes
+
+- name: "Copy laurel config"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/laurel/config.toml"
+    dest: /etc/laurel/config.toml
+    owner: _laurel
+    group: _laurel
+    mode: '0640'
+  become: yes
+
+- name: "Copy laurel audit plugin config"
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/laurel/laurel.conf"
+    dest: /etc/audit/plugins.d/laurel.conf
+    owner: root
+    group: root
+    mode: '0640'
+  become: yes
+
+- name: "Check if laurel binary exists"
+  ansible.builtin.stat:
+    path: /usr/local/sbin/laurel
+  register: laurel_stat
+
+- name: "Download and install laurel"
+  ansible.builtin.shell: |
+    curl -sL "https://github.com/threathunters-io/laurel/releases/download/v{{ laurel_version }}/laurel-v{{ laurel_version }}-x86_64-glibc.tar.gz" \
+      -o /tmp/laurel.tar.gz
+    mkdir -p /tmp/laurel-extract
+    tar xzf /tmp/laurel.tar.gz -C /tmp/laurel-extract/
+    install -m755 /tmp/laurel-extract/laurel /usr/local/sbin/laurel
+    rm -rf /tmp/laurel.tar.gz /tmp/laurel-extract
+  become: yes
+  when: not laurel_stat.stat.exists
+
+- name: "Restart auditd to pick up laurel"
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  become: yes
+
+  # Handler section — define at role level via handlers/main.yml if needed
+  # For simplicity, inline restart is used above.

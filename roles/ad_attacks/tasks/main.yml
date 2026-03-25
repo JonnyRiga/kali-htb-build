@@ -1,0 +1,166 @@
+---
+# Role: ad_attacks — Active Directory attack tools
+# NOTE: Several tools have known installation issues.
+# Each is documented inline with the recommended Kali fix.
+
+# --- Impacket ---
+# parrot-build installs via pipx from git. The Kali apt version (python3-impacket)
+# works but is often behind. We install the latest via pipx.
+- name: "Install impacket via pipx (latest from git)"
+  community.general.pipx:
+    name: impacket
+    source: "git+https://github.com/fortra/impacket.git"
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
+
+# --- NetExec ---
+# KNOWN ISSUE: Do NOT pip-install CrackMapExec directly — it is abandoned.
+# NetExec (nxc) is the maintained fork. The Kali apt package works but
+# pipx from git gives the latest. We remove the apt version first to avoid
+# conflicts, then install via pipx.
+- name: "Remove apt netexec to avoid conflict with pipx version"
+  ansible.builtin.apt:
+    name: netexec
+    state: absent
+  become: yes
+
+- name: "Install NetExec via pipx (latest from git)"
+  community.general.pipx:
+    name: netexec
+    source: "git+https://github.com/Pennyw0rth/NetExec.git"
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
+
+# --- Certipy-ad ---
+# KNOWN ISSUE: pip-installing certipy-ad globally causes dependency conflicts
+# with impacket. Always isolate with pipx.
+- name: "Remove apt certipy-ad to avoid conflict"
+  ansible.builtin.apt:
+    name: certipy-ad
+    state: absent
+  become: yes
+
+- name: "Install certipy-ad via pipx (isolated from impacket)"
+  community.general.pipx:
+    name: certipy-ad
+    source: "git+https://github.com/ly4k/Certipy.git"
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
+
+# --- BloodHound.py (CE edition) ---
+- name: "Install bloodhound-ce python ingestor via pipx"
+  community.general.pipx:
+    name: bloodhound-ce
+    source: "git+https://github.com/dirkjanm/BloodHound.py.git@bloodhound-ce"
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
+
+# --- Kerbrute ---
+# KNOWN ISSUE: `go install github.com/ropnop/kerbrute@master` often fails
+# because the Go module path changed. Use a pre-built binary from GitHub
+# releases instead.
+- name: "Check if kerbrute is already installed"
+  ansible.builtin.stat:
+    path: /usr/local/bin/kerbrute
+  register: kerbrute_stat
+
+- name: "Download kerbrute binary from GitHub releases"
+  ansible.builtin.get_url:
+    url: "https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64"
+    dest: /usr/local/bin/kerbrute
+    mode: '0755'
+  become: yes
+  when: not kerbrute_stat.stat.exists
+
+# --- Coercer ---
+- name: "Install coercer via apt"
+  ansible.builtin.apt:
+    name: coercer
+    state: present
+  become: yes
+
+# --- Evil-WinRM ---
+# The apt version has broken ruby dependencies. Install via gem.
+- name: "Install evil-winrm gem dependencies"
+  ansible.builtin.gem:
+    name: "{{ item }}"
+    state: latest
+    user_install: no
+  loop:
+    - logger
+    - stringio
+    - winrm
+    - builder
+    - erubi
+    - gssapi
+    - gyoku
+    - httpclient
+    - logging
+    - little-plugger
+    - nori
+    - rubyntlm
+    - winrm-fs
+    - evil-winrm
+  become: yes
+
+# --- BloodHound CE (Docker Compose) ---
+- name: "Create BloodHound CE directories"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ bloodhound_dir }}"
+    - "{{ bloodhound_dir }}/server"
+  become: yes
+
+- name: "Download BloodHound CE docker-compose.yaml"
+  ansible.builtin.get_url:
+    url: "https://ghst.ly/getbhce"
+    dest: "{{ bloodhound_dir }}/server/docker-compose.yaml"
+    mode: '0644'
+  become: yes
+
+- name: "Change BloodHound CE port from 8080 to {{ bloodhound_port }}"
+  ansible.builtin.replace:
+    path: "{{ bloodhound_dir }}/server/docker-compose.yaml"
+    regexp: 'BLOODHOUND_PORT:-8080'
+    replace: "BLOODHOUND_PORT:-{{ bloodhound_port }}"
+  become: yes
+
+- name: "Start BloodHound CE containers"
+  community.docker.docker_compose_v2:
+    project_src: "{{ bloodhound_dir }}/server"
+    state: present
+  become: yes
+
+- name: "Wait for BloodHound CE to be ready"
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ bloodhound_port }}"
+    delay: 10
+    timeout: 300
+  become: yes
+
+- name: "Retrieve BloodHound CE initial password"
+  ansible.builtin.shell: |
+    cd {{ bloodhound_dir }}/server
+    docker compose logs bloodhound 2>&1 | grep -oP 'Password Set To:\s+\K\S+' | tail -1
+  register: bloodhound_password
+  become: yes
+  changed_when: false
+
+- name: "Save BloodHound CE credentials to file"
+  ansible.builtin.copy:
+    content: |
+      url: http://localhost:{{ bloodhound_port }}
+      username: admin
+      password: {{ bloodhound_password.stdout }}
+    dest: "{{ bloodhound_dir }}/server/initial-password.txt"
+    mode: '0600'
+  become: yes
+  when: bloodhound_password.stdout | length > 0

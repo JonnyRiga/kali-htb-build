@@ -1,0 +1,101 @@
+---
+# Role: c2_tunnelling — C2 frameworks, tunnelling, and post-exploitation
+
+# --- Chisel ---
+- name: "Create chisel directory"
+  ansible.builtin.file:
+    path: "{{ opt_dir }}/chisel"
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: "Download chisel linux amd64"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/jpillora/chisel/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/jpillora/chisel/releases/download/v${LATEST}/chisel_${LATEST}_linux_amd64.gz" | gunzip > {{ opt_dir }}/chisel/chisel_linux
+    chmod +x {{ opt_dir }}/chisel/chisel_linux
+  args:
+    creates: "{{ opt_dir }}/chisel/chisel_linux"
+  become: yes
+
+- name: "Download chisel windows amd64"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/jpillora/chisel/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/jpillora/chisel/releases/download/v${LATEST}/chisel_${LATEST}_windows_amd64.gz" | gunzip > {{ opt_dir }}/chisel/chisel_windows.exe
+  args:
+    creates: "{{ opt_dir }}/chisel/chisel_windows.exe"
+  become: yes
+
+# --- Ligolo-ng ---
+- name: "Create ligolo-ng directory"
+  ansible.builtin.file:
+    path: "{{ opt_dir }}/ligolo-ng"
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: "Download ligolo-ng proxy (linux)"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/nicocha30/ligolo-ng/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/nicocha30/ligolo-ng/releases/download/v${LATEST}/ligolo-ng_proxy_${LATEST}_linux_amd64.tar.gz" | tar xz -C {{ opt_dir }}/ligolo-ng/
+    chmod +x {{ opt_dir }}/ligolo-ng/proxy
+  args:
+    creates: "{{ opt_dir }}/ligolo-ng/proxy"
+  become: yes
+
+- name: "Download ligolo-ng agent (linux)"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/nicocha30/ligolo-ng/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/nicocha30/ligolo-ng/releases/download/v${LATEST}/ligolo-ng_agent_${LATEST}_linux_amd64.tar.gz" | tar xz -C {{ opt_dir }}/ligolo-ng/
+    chmod +x {{ opt_dir }}/ligolo-ng/agent
+  args:
+    creates: "{{ opt_dir }}/ligolo-ng/agent"
+  become: yes
+
+- name: "Download ligolo-ng agent (windows)"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/nicocha30/ligolo-ng/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/nicocha30/ligolo-ng/releases/download/v${LATEST}/ligolo-ng_agent_${LATEST}_windows_amd64.zip" -o /tmp/ligolo_win.zip
+    unzip -o /tmp/ligolo_win.zip -d {{ opt_dir }}/ligolo-ng/
+    rm -f /tmp/ligolo_win.zip
+  args:
+    creates: "{{ opt_dir }}/ligolo-ng/agent.exe"
+  become: yes
+
+# --- PEASS-ng ---
+- name: "Create PEASS directory"
+  ansible.builtin.file:
+    path: "{{ opt_dir }}/peas"
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: "Download linpeas.sh"
+  ansible.builtin.get_url:
+    url: "https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh"
+    dest: "{{ opt_dir }}/peas/linpeas.sh"
+    mode: '0755'
+  become: yes
+
+- name: "Download winPEASx64.exe"
+  ansible.builtin.get_url:
+    url: "https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEASx64.exe"
+    dest: "{{ opt_dir }}/peas/winPEASx64.exe"
+    mode: '0755'
+  become: yes
+
+# --- pwncat-cs ---
+- name: "Install pwncat-cs via pipx"
+  community.general.pipx:
+    name: pwncat-cs
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ user_home }}/.local/bin"
+
+# --- SharpCollection ---
+- name: "Clone SharpCollection"
+  ansible.builtin.git:
+    repo: "https://github.com/Flangvik/SharpCollection"
+    dest: "{{ opt_dir }}/SharpCollection"
+    depth: 1
+  become: yes

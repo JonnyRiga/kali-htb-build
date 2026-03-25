@@ -1,0 +1,17 @@
+---
+# Role: system — sudoers, system-level configuration
+
+- name: "Add NOPASSWD sudo for current user"
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    regexp: "^{{ local_user }} ALL="
+    line: "{{ local_user }}\tALL=(ALL) NOPASSWD:ALL"
+    validate: "visudo -cf %s"
+    insertbefore: EOF
+  become: yes
+  when: local_user != 'root'
+
+- name: "Upgrade all packages to latest"
+  ansible.builtin.apt:
+    upgrade: yes
+  become: yes

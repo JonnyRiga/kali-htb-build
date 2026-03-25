@@ -1,0 +1,43 @@
+---
+# Role: reversing — binary analysis, debugging, and reverse engineering
+
+- name: "Install reversing tools via apt"
+  ansible.builtin.apt:
+    name:
+      - gdb
+      - ghidra
+      - radare2
+      - binwalk
+      - foremost
+      - steghide
+      - stegseek
+      - ltrace
+      - strace
+    state: present
+  become: yes
+
+# --- pwndbg ---
+- name: "Clone pwndbg"
+  ansible.builtin.git:
+    repo: "https://github.com/pwndbg/pwndbg.git"
+    dest: "{{ user_home }}/pwndbg"
+    depth: 1
+  register: pwndbg_clone
+
+- name: "Install pwndbg"
+  ansible.builtin.shell: |
+    cd {{ user_home }}/pwndbg && ./setup.sh
+  args:
+    creates: "{{ user_home }}/pwndbg/.venv"
+  when: pwndbg_clone.changed or not pwndbg_clone.stat is defined
+
+# --- Chainsaw ---
+- name: "Download and extract Chainsaw"
+  ansible.builtin.shell: |
+    LATEST=$(curl -s https://api.github.com/repos/WithSecureLabs/chainsaw/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+    curl -sL "https://github.com/WithSecureLabs/chainsaw/releases/download/v${LATEST}/chainsaw_all_platforms+rules+evtx_logs.zip" -o /tmp/chainsaw.zip
+    unzip -o /tmp/chainsaw.zip -d {{ opt_dir }}/
+    rm -f /tmp/chainsaw.zip
+  args:
+    creates: "{{ opt_dir }}/chainsaw"
+  become: yes

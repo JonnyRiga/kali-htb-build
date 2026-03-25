@@ -1,0 +1,34 @@
+---
+# Custom Kali Build — adapted from IppSec's parrot-build
+# Run: ~/.local/bin/ansible-playbook site.yml -K
+# Tags: base, docker, recon, exploitation, ad_attacks, c2_tunnelling,
+#       reversing, wordlists, shell_config, logging, browser, system
+- name: "Custom Kali Build"
+  hosts: localhost
+  connection: local
+  become: no
+
+  vars_files:
+    - group_vars/all.yml
+
+  pre_tasks:
+    - name: "Update apt cache (once per run)"
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      become: yes
+      tags: always
+
+  roles:
+    - { role: base,           tags: ['base'] }
+    - { role: docker,         tags: ['docker'] }
+    - { role: recon,          tags: ['recon'] }
+    - { role: exploitation,   tags: ['exploitation'] }
+    - { role: ad_attacks,     tags: ['ad_attacks'] }
+    - { role: c2_tunnelling,  tags: ['c2_tunnelling'] }
+    - { role: reversing,      tags: ['reversing'] }
+    - { role: wordlists,      tags: ['wordlists'] }
+    - { role: shell_config,   tags: ['shell_config'] }
+    - { role: logging,        tags: ['logging'] }
+    - { role: browser,        tags: ['browser'] }
+    - { role: system,         tags: ['system'] }

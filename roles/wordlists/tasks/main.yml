@@ -1,0 +1,22 @@
+---
+# Role: wordlists — ensure standard wordlists are available
+
+- name: "Install seclists via apt"
+  ansible.builtin.apt:
+    name: seclists
+    state: present
+  become: yes
+
+- name: "Ensure rockyou.txt is decompressed"
+  ansible.builtin.shell: |
+    gunzip /usr/share/wordlists/rockyou.txt.gz
+  args:
+    creates: /usr/share/wordlists/rockyou.txt
+  become: yes
+
+- name: "Symlink seclists to /opt/SecLists for compatibility"
+  ansible.builtin.file:
+    src: /usr/share/seclists
+    dest: "{{ opt_dir }}/SecLists"
+    state: link
+  become: yes
