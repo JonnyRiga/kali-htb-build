@@ -58,8 +58,9 @@
 # --- Chainsaw ---
 - name: "Download and extract Chainsaw"
   ansible.builtin.shell: |
-    LATEST=$(curl -s https://api.github.com/repos/WithSecureLabs/chainsaw/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-    curl -sL "https://github.com/WithSecureLabs/chainsaw/releases/download/v${LATEST}/chainsaw_all_platforms+rules+evtx_logs.zip" -o /tmp/chainsaw.zip
+    URL=$(curl -s https://api.github.com/repos/WithSecureLabs/chainsaw/releases/latest \
+      | jq -r '.assets[] | select(.name | test("all_platforms.*rules")) | .browser_download_url' | head -1)
+    curl -sL "$URL" -o /tmp/chainsaw.zip
     unzip -o /tmp/chainsaw.zip -d {{ opt_dir }}/
     rm -f /tmp/chainsaw.zip
   args:
