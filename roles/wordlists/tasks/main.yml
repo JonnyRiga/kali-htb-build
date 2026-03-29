@@ -8,6 +8,18 @@
     state: present
   become: yes
 
+- name: "Check if /usr/share/seclists is a git repo"
+  ansible.builtin.stat:
+    path: /usr/share/seclists/.git
+  register: seclists_git
+
+- name: "Remove non-git SecLists directory (apt-installed version)"
+  ansible.builtin.file:
+    path: /usr/share/seclists
+    state: absent
+  become: yes
+  when: not seclists_git.stat.exists
+
 - name: "Clone SecLists (shallow, latest only)"
   ansible.builtin.git:
     repo: https://github.com/danielmiessler/SecLists.git
