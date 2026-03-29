@@ -2,13 +2,28 @@
 # getburpcert.sh — extract Burp Suite CA certificate in headless mode
 # Usage: getburpcert.sh
 # Output: /tmp/BurpSuiteCA.der  (then imported by Ansible)
-set -euo pipefail
+set -uo pipefail
 
 CERT_OUT="/tmp/BurpSuiteCA.der"
 BURP_JAR=""
 
 echo "[*] Locating Burp Suite JAR..."
-BURP_JAR="$(find / -name 'burpsuite*.jar' 2>/dev/null | grep -v '.bak' | sort | tail -1)"
+
+# Check known Kali install locations first
+for candidate in \
+  /usr/share/burpsuite/burpsuite.jar \
+  /opt/BurpSuitePro/burpsuite_pro.jar \
+  /opt/BurpSuiteCommunity/burpsuite_community.jar; do
+  if [[ -f "$candidate" ]]; then
+    BURP_JAR="$candidate"
+    break
+  fi
+done
+
+# Fall back to filesystem search if not found in known locations
+if [[ -z "$BURP_JAR" ]]; then
+  BURP_JAR="$(find /usr /opt /home -name 'burpsuite*.jar' 2>/dev/null | grep -v '.bak' | sort | tail -1 || true)"
+fi
 
 if [[ -z "$BURP_JAR" ]]; then
   echo "[!] Burp Suite JAR not found. Is Burp installed?"
