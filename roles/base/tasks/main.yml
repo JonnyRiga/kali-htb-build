@@ -46,6 +46,7 @@
       - zsh
       - vim
       - neovim
+      - fonts-firacode
     state: present
   become: yes
 
