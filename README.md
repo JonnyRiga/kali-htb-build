@@ -2,6 +2,25 @@
 
 Ansible playbook that provisions a fresh Kali Linux VM into a fully-loaded pentest workstation. Inspired by [IppSec's parrot-build](https://github.com/IppSec/parrot-build), rebuilt from the ground up for **Kali Linux Rolling** (XFCE / zsh).
 
+## How This Differs from IppSec's parrot-build
+
+[IppSec's parrot-build](https://github.com/IppSec/parrot-build) is the original inspiration and well worth studying. This repo takes the same concept and rebuilds it with a different target and scope:
+
+| | IppSec's parrot-build | This repo |
+|---|---|---|
+| **Target OS** | Parrot HTB Edition | Kali Linux Rolling (XFCE / zsh) |
+| **Setup** | Manual 6-step process | Single `./bootstrap.sh` command |
+| **Ansible install** | Manual (`pip install ansible`) | Auto-handled by bootstrap |
+| **Tool isolation** | Global installs | pipx virtualenvs for impacket, netexec, certipy-ad, bloodhound.py |
+| **BloodHound** | Legacy version | BloodHound CE via Docker Compose (auto-started, password saved) |
+| **Binary tools** | Compiled from source or manual | Pre-built binaries for kerbrute, chisel, ligolo-ng |
+| **Logging** | Not included | ufw (SYN logging) + auditd + laurel structured audit logs |
+| **Idempotent** | Not designed for re-runs | Fully idempotent — safe to re-run at any time |
+| **Selective runs** | All-or-nothing | Tag-based — run individual roles without touching the rest |
+| **Known issues doc** | Minimal | Explicit workarounds table for every tool with install problems |
+
+If you're on Parrot, use IppSec's. If you're on Kali and want a one-command fully automated build, use this.
+
 ## What It Does
 
 - Installs and configures **50+ pentest tools** across recon, exploitation, AD attacks, C2/tunnelling, reversing, and more
