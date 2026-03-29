@@ -28,7 +28,7 @@ If you're on Parrot, use IppSec's. If you're on Kali and want a one-command full
 - Downloads pre-built binaries for tools that break when compiled from source (kerbrute, chisel, ligolo-ng)
 - Sets up **BloodHound CE** via Docker Compose — auto-starts and captures the initial admin password
 - Configures **ufw** with SYN logging, **auditd** with [laurel](https://github.com/threathunters-io/laurel) for structured audit logs
-- Deploys **Firefox extension policies** (DarkReader, FoxyProxy, Wappalyzer) and Burp Suite extras (JRuby/Jython JARs)
+- Deploys **Firefox extension policies** (DarkReader, FoxyProxy, uBlock Origin) and Burp Suite extras (JRuby/Jython JARs)
 - Installs official **Docker CE** from Docker's repository (replaces the Kali `docker.io` package)
 - Drops PEASS-ng, SharpCollection, Chainsaw, and SecLists into `/opt/`
 - Installs **VS Code** from Microsoft's official apt repo with pentest/dev extensions pre-installed
@@ -94,12 +94,12 @@ Or via `bootstrap.sh`:
 | `wordlists` | SecLists (git clone, latest), rockyou decompression, `/opt/SecLists` symlink |
 | `shell_config` | tmux config (vi-mode, mouse, pane management), zsh aliases, custom zsh prompt (VPN/tun0-aware, colour-coded IP) |
 | `logging` | ufw (SYN logging), auditd + laurel, rsyslog |
-| `browser` | Firefox policies (DarkReader, FoxyProxy, Wappalyzer), Burp JRuby/Jython JARs |
+| `browser` | Firefox policies (DarkReader, FoxyProxy, uBlock Origin), Burp JRuby/Jython JARs |
 | `burp_cert` | Download Burp CA cert (requires Burp running on `:8080`) — opt-in only |
 | `system` | NOPASSWD sudo, full `apt upgrade` |
 | `ide` | VS Code from Microsoft apt repo + extensions: Python, GitHub Copilot, Snyk, Hex Editor, Code Spell Checker, Solidity Auditor |
 | `custom_tools` | Deploy `privy.sh` (privesc enumeration) and `sthunt.sh` (stego/web hunter) to `/usr/local/bin` with zsh aliases |
-| `terminal` | QTerminal config: Fira Code 13pt, 0% transparency, bookmarks |
+| `terminal` | QTerminal config: bookmarks, keyboard shortcuts, layout |
 
 ## Known Issues & Workarounds
 
@@ -118,6 +118,7 @@ These tools have well-documented installation problems. Each one is handled expl
 ## Post-Run Steps
 
 1. **Log out and back in** — required for docker group membership and GOPATH changes to take effect
+2. **Add Firefox extension manually: Wappalyzer** — install from [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/wappalyzer/) (policy-based auto-install is unreliable for this extension)
 
 Everything else (Burp CA cert, Ligolo-ng TUN interface, BloodHound CE, Firefox extensions) is handled automatically by `bootstrap.sh`.
 ## File Structure
