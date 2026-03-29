@@ -7,14 +7,19 @@
     state: directory
     mode: '0755'
 
+- name: "Check if qterminal.ini already exists"
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.config/qterminal.org/qterminal.ini"
+  register: qterminal_ini_stat
+
 - name: "Deploy QTerminal configuration (initial only, do not overwrite)"
-  ansible.builtin.copy:
-    src: "{{ role_path }}/files/qterminal.ini"
+  ansible.builtin.template:
+    src: qterminal.ini.j2
     dest: "{{ user_home }}/.config/qterminal.org/qterminal.ini"
     owner: "{{ local_user }}"
     group: "{{ local_user }}"
     mode: '0644'
-    force: false
+  when: not qterminal_ini_stat.stat.exists
 
 - name: "Deploy QTerminal bookmarks"
   ansible.builtin.copy:
