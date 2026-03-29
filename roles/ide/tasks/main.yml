@@ -1,0 +1,56 @@
+---
+# Role: ide — Visual Studio Code installation with pentest/dev extensions
+# Uses Microsoft's official apt repo (Kali/Debian compatible)
+
+- name: "Install VS Code apt dependencies"
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - gnupg2
+    state: present
+  become: yes
+
+- name: "Add Microsoft GPG key"
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /tmp/microsoft.asc
+    mode: '0644'
+
+- name: "Dearmor and install Microsoft GPG key"
+  ansible.builtin.shell: |
+    gpg --dearmor < /tmp/microsoft.asc > /usr/share/keyrings/microsoft-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/microsoft-archive-keyring.gpg
+  become: yes
+
+- name: "Add VS Code apt repository"
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/code stable main"
+    state: present
+    filename: vscode
+  become: yes
+
+- name: "Install VS Code and xvfb (virtual display for headless extension install)"
+  ansible.builtin.apt:
+    name:
+      - code
+      - xvfb
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: "Install VS Code extensions (xvfb-run when no display available)"
+  ansible.builtin.shell: |
+    if [ -n "${DISPLAY:-}" ]; then
+      code --install-extension {{ item }} --force
+    else
+      xvfb-run --auto-servernum code --install-extension {{ item }} --force
+    fi
+  loop:
+    - ms-python.python
+    - GitHub.copilot
+    - snyk-security.snyk-vulnerability-scanner
+    - streetsidesoftware.code-spell-checker
+    - ms-vscode.hexeditor
+    - tintinweb.solidity-visual-auditor
+  become: no

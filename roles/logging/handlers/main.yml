@@ -4,3 +4,9 @@
     name: ufw
     state: restarted
   become: yes
+
+- name: restart auditd
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  become: yes

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# getburpcert.sh — extract Burp Suite CA certificate in headless mode
+# Usage: getburpcert.sh
+# Output: /tmp/BurpSuiteCA.der  (then imported by Ansible)
+set -euo pipefail
+
+CERT_OUT="/tmp/BurpSuiteCA.der"
+BURP_JAR=""
+
+echo "[*] Locating Burp Suite JAR..."
+BURP_JAR="$(find / -name 'burpsuite*.jar' 2>/dev/null | grep -v '.bak' | sort | tail -1)"
+
+if [[ -z "$BURP_JAR" ]]; then
+  echo "[!] Burp Suite JAR not found. Is Burp installed?"
+  exit 1
+fi
+echo "[+] Found: $BURP_JAR"
+
+# Locate bundled JRE (Burp ships its own)
+BURP_JRE="$(dirname "$BURP_JAR")/../jre/bin/java"
+if [[ -x "$BURP_JRE" ]]; then
+  JAVA="$BURP_JRE"
+else
+  JAVA="$(command -v java)"
+fi
+
+echo "[*] Launching Burp in headless mode (45s timeout)..."
+timeout 45 "$JAVA" -Djava.awt.headless=true -jar "$BURP_JAR" &
+BURP_PID=$!
+
+echo "[*] Waiting 30s for Burp to initialise..."
+sleep 30
+
+echo "[*] Fetching CA certificate from :8080..."
+if curl -sf http://127.0.0.1:8080/cert -o "$CERT_OUT"; then
+  echo "[+] Certificate saved to $CERT_OUT"
+else
+  echo "[!] Failed to fetch cert — is Burp listening on :8080?"
+  kill "$BURP_PID" 2>/dev/null || true
+  exit 1
+fi
+
+kill "$BURP_PID" 2>/dev/null || true
+echo "[+] Done."

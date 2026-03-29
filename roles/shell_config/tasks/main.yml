@@ -14,10 +14,38 @@
     marker: "# {mark} CUSTOM-KALI-BUILD ALIASES"
     block: |
       # Useful aliases
-      alias ll='ls -la'
-      alias la='ls -A'
+      alias ll='ls -lah'
+      alias la='ls -lAh'
       alias serve='python3 -m http.server 80'
       alias peas='cd /opt/peas'
       alias sharp='cd /opt/SharpCollection'
-      alias tun0='ip addr show tun0 2>/dev/null | grep "inet " | awk "{print \$2}" | cut -d/ -f1'
+      alias tun0ip='ip addr show tun0 2>/dev/null | grep "inet " | awk "{print \$2}" | cut -d/ -f1'
+      alias myip='ip -4 addr show scope global | grep inet | awk "{print \$2}" | cut -d/ -f1 | head -1'
+    create: yes
+
+- name: "Deploy custom zsh prompt with VPN/network detection"
+  ansible.builtin.blockinfile:
+    path: "{{ user_home }}/.zshrc"
+    marker: "# {mark} CUSTOM-KALI-BUILD PROMPT"
+    block: |
+      # ── Custom Kali prompt with VPN/IP awareness ─────────────────────────────
+      _kali_prompt_ip() {
+        local vpn_ip
+        vpn_ip=$(ip addr show tun0 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1)
+        if [[ -n "$vpn_ip" ]]; then
+          echo "%F{green}[VPN:${vpn_ip}]%f"
+        else
+          local eth_ip
+          eth_ip=$(ip -4 addr show scope global 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -1)
+          [[ -n "$eth_ip" ]] && echo "%F{cyan}[${eth_ip}]%f" || echo "%F{red}[no-ip]%f"
+        fi
+      }
+
+      _kali_prompt_status() {
+        [[ $? -ne 0 ]] && echo "%F{red}✖%f " || echo "%F{green}✔%f "
+      }
+
+      setopt PROMPT_SUBST
+      PROMPT='%F{yellow}┌─[%f%F{magenta}%n%f%F{yellow}@%f%F{blue}%m%f%F{yellow}]%f $(_kali_prompt_ip) %F{yellow}[%f%~%F{yellow}]%f
+      %F{yellow}└─%f$(_kali_prompt_status)%F{white}$%f '
     create: yes

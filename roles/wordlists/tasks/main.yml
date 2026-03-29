@@ -1,10 +1,27 @@
 ---
 # Role: wordlists — ensure standard wordlists are available
+# Uses git clone for SecLists to get latest (apt package is often outdated).
 
-- name: "Install seclists via apt"
+- name: "Install git (required for SecLists clone)"
   ansible.builtin.apt:
-    name: seclists
+    name: git
     state: present
+  become: yes
+
+- name: "Clone SecLists (shallow, latest only)"
+  ansible.builtin.git:
+    repo: https://github.com/danielmiessler/SecLists.git
+    dest: /usr/share/seclists
+    version: master
+    depth: 1
+    update: yes
+  become: yes
+
+- name: "Symlink SecLists to /opt/SecLists for tool compatibility"
+  ansible.builtin.file:
+    src: /usr/share/seclists
+    dest: "{{ opt_dir }}/SecLists"
+    state: link
   become: yes
 
 - name: "Ensure rockyou.txt is decompressed"
@@ -14,9 +31,12 @@
     creates: /usr/share/wordlists/rockyou.txt
   become: yes
 
-- name: "Symlink seclists to /opt/SecLists for compatibility"
-  ansible.builtin.file:
-    src: /usr/share/seclists
-    dest: "{{ opt_dir }}/SecLists"
-    state: link
-  become: yes
+- name: "Check if custom dirmaster.txt wordlist exists"
+  ansible.builtin.stat:
+    path: /usr/share/wordlists/dirmaster.txt
+  register: dirmaster_stat
+
+- name: "Note: dirmaster.txt not found — add manually to /usr/share/wordlists/"
+  ansible.builtin.debug:
+    msg: "Custom dirmaster.txt wordlist not found at /usr/share/wordlists/. Copy it manually if needed."
+  when: not dirmaster_stat.stat.exists
