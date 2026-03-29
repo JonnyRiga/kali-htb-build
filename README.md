@@ -39,7 +39,6 @@ If you're on Parrot, use IppSec's. If you're on Kali and want a one-command full
 ```bash
 git clone https://github.com/JonnyRiga/custom-kali-build.git
 cd custom-kali-build
-chmod +x bootstrap.sh
 ./bootstrap.sh
 ```
 
