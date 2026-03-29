@@ -39,12 +39,14 @@ else
   JAVA="$(command -v java)"
 fi
 
-echo "[*] Launching Burp in headless mode (45s timeout)..."
-timeout 45 "$JAVA" -Djava.awt.headless=true -jar "$BURP_JAR" &
+# Launch Burp headlessly. Pipe 'yes' to auto-accept the T&C prompt that
+# Burp Community prints on first run before it will start listening.
+echo "[*] Launching Burp in headless mode (auto-accepting T&C)..."
+yes | timeout 90 "$JAVA" -Djava.awt.headless=true -jar "$BURP_JAR" &
 BURP_PID=$!
 
-echo "[*] Waiting 30s for Burp to initialise..."
-sleep 30
+echo "[*] Waiting 40s for Burp to initialise..."
+sleep 40
 
 echo "[*] Fetching CA certificate from :8080..."
 if curl -sf http://127.0.0.1:8080/cert -o "$CERT_OUT"; then
