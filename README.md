@@ -99,6 +99,7 @@ Or via `bootstrap.sh`:
 | `system` | NOPASSWD sudo, full `apt upgrade` |
 | `ide` | VS Code from Microsoft apt repo + extensions: Python, GitHub Copilot, Snyk, Hex Editor, Code Spell Checker, Solidity Auditor |
 | `custom_tools` | Deploy `privy.sh` (privesc enumeration) and `sthunt.sh` (stego/web hunter) to `/usr/local/bin` with zsh aliases |
+| `terminal` | QTerminal config: Fira Code 13pt, 0% transparency, bookmarks |
 
 ## Known Issues & Workarounds
 
@@ -155,7 +156,7 @@ custom-kali-build/
     ├── custom_tools/           # Personal scripts (privy.sh, sthunt.sh)
     │   ├── tasks/
     │   └── files/
-    └── terminal/               # QTerminal config (not wired into site.yml)
+    └── terminal/               # QTerminal config (Fira Code 13pt, 0% transparency)
         ├── tasks/
         └── files/
 ```
