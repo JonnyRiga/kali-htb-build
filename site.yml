@@ -2,7 +2,7 @@
 # Custom Kali Build — adapted from IppSec's parrot-build
 # Run: ~/.local/bin/ansible-playbook site.yml -K
 # Tags: base, docker, recon, exploitation, ad_attacks, c2_tunnelling,
-#       reversing, wordlists, shell_config, logging, browser, system, ide, custom_tools
+#       reversing, wordlists, shell_config, logging, browser, system, ide, custom_tools, terminal
 - name: "Custom Kali Build"
   hosts: localhost
   connection: local
@@ -34,3 +34,4 @@
     - { role: system,         tags: ['system'] }
     - { role: ide,            tags: ['ide'] }
     - { role: custom_tools,   tags: ['custom_tools'] }
+    - { role: terminal,       tags: ['terminal'] }
