@@ -10,20 +10,10 @@
     mode: '0755'
   become: yes
 
-- name: "Deploy sthunt.sh (autonomous stego/web intelligence hunter)"
-  ansible.builtin.copy:
-    src: "{{ role_path }}/files/sthunt.sh"
-    dest: /usr/local/bin/sthunt.sh
-    owner: root
-    group: root
-    mode: '0755'
-  become: yes
-
 - name: "Add custom tool aliases to .zshrc"
   ansible.builtin.blockinfile:
     path: "{{ user_home }}/.zshrc"
     marker: "# {mark} CUSTOM-TOOLS ALIASES"
     block: |
       alias privy='privy.sh'
-      alias sthunt='sthunt.sh'
     create: yes

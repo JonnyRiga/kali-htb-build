@@ -32,7 +32,7 @@ If you're on Parrot, use IppSec's. If you're on Kali and want a one-command full
 - Installs official **Docker CE** from Docker's repository (replaces the Kali `docker.io` package)
 - Drops PEASS-ng, SharpCollection, Chainsaw, and SecLists into `/opt/`
 - Installs **VS Code** from Microsoft's official apt repo with pentest/dev extensions pre-installed
-- Deploys custom personal tools (`privy.sh`, `sthunt.sh`) to `/usr/local/bin` with shell aliases
+- Deploys **`privy.sh`** (custom Linux privesc enumeration tool) to `/usr/local/bin` with a `privy` shell alias
 - Configures tmux, custom zsh prompt (VPN/IP-aware), zsh aliases, GOPATH, and NOPASSWD sudo
 - Fully **idempotent** — safe to re-run at any time
 
@@ -98,7 +98,7 @@ Or via `bootstrap.sh`:
 | `burp_cert` | Download Burp CA cert (requires Burp running on `:8080`) — opt-in only |
 | `system` | NOPASSWD sudo, full `apt upgrade` |
 | `ide` | VS Code from Microsoft apt repo + extensions: Python, GitHub Copilot, Snyk, Hex Editor, Code Spell Checker, Solidity Auditor |
-| `custom_tools` | Deploy `privy.sh` (privesc enumeration) and `sthunt.sh` (stego/web hunter) to `/usr/local/bin` with zsh aliases |
+| `custom_tools` | Deploy `privy.sh` (privesc enumeration) to `/usr/local/bin` with zsh alias |
 | `terminal` | QTerminal config: Fira Code 13pt, white-on-black, 0% transparency, bookmarks |
 
 ## Known Issues & Workarounds
@@ -115,11 +115,43 @@ These tools have well-documented installation problems. Each one is handled expl
 | **BloodHound.py** | Kali apt has legacy version, not CE-compatible | CE branch installed via pipx from git |
 | **SecLists (apt)** | apt-installed `/usr/share/seclists` has no `.git` dir, blocks clone | Detects non-git directory, removes it, then clones latest from git |
 
+## privy.sh
+
+A custom Linux privilege escalation enumeration script deployed to `/usr/local/bin/privy.sh` and callable via `privy`. Run it on a target after gaining a foothold to enumerate privesc vectors.
+
+It works through 15 phases and writes each result to a structured `Privy/` output directory:
+
+| Phase | What it checks |
+|-------|---------------|
+| 1 | System info — OS, kernel, architecture |
+| 2 | Users & groups — sudo permissions, UID 0 accounts, dangerous group memberships |
+| 3 | `/etc/passwd` and `/etc/shadow` (if readable) |
+| 4 | Root-owned services and running processes |
+| 5 | Cron jobs — system and user crontabs, writable cron scripts |
+| 6 | PATH and environment variables |
+| 7 | Network info — interfaces, open ports, active connections |
+| 8 | SUID / SGID binaries |
+| 9 | SSH keys and credentials |
+| 10 | MySQL / database info |
+| 11 | Interesting files and logs |
+| 12 | File system enumeration — world-writable dirs, unusual mounts |
+| 13 | Shell histories |
+| 14 | Development tools and upload vectors |
+| 15 | Exploit path suggestions based on findings |
+
 ## Post-Run Steps
 
 1. **Log out and back in** — required for docker group membership and GOPATH changes to take effect
 
 Everything else (Burp CA cert, Ligolo-ng TUN interface, BloodHound CE, Firefox extensions) is handled automatically by `bootstrap.sh`.
+
+### Existing VM — Terminal Settings
+
+If you run this playbook on a VM you've already been using (QTerminal was open during the run), the terminal settings won't apply immediately. To avoid QTerminal overwriting the deployed config on close:
+
+1. When `bootstrap.sh` finishes, **don't close the terminal you ran it from**
+2. Open a **new** QTerminal window — it will read the freshly deployed config
+3. Close the original terminal from the new window
 ## File Structure
 
 ```
@@ -151,7 +183,7 @@ kali-htb-build/
     │   └── templates/
     ├── system/tasks/           # System-level configuration
     ├── ide/tasks/              # VS Code + extensions
-    ├── custom_tools/           # Personal scripts (privy.sh, sthunt.sh)
+    ├── custom_tools/           # Personal scripts (privy.sh)
     │   ├── tasks/
     │   └── files/
     └── terminal/               # QTerminal config (Fira Code 13pt, 0% transparency)
