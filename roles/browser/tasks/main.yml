@@ -41,14 +41,8 @@
   become: yes
 
 # --- Burp CA cert (automated headless extraction) ---
-# Run with: ansible-playbook site.yml --tags burp_cert -K
-# Launches Burp headlessly, waits for init, fetches cert, imports system-wide.
-- name: "Check if BurpSuiteCA.der already exists"
-  ansible.builtin.stat:
-    path: /usr/local/share/ca-certificates/BurpSuiteCA.der
-  register: burp_cert
-  tags: ['burp_cert', 'never']
-
+# Runs automatically as part of the browser role.
+# Also callable standalone: ansible-playbook site.yml --tags burp_cert
 - name: "Copy getburpcert.sh helper script"
   ansible.builtin.copy:
     src: "{{ role_path }}/files/getburpcert.sh"
@@ -57,13 +51,19 @@
     group: root
     mode: '0755'
   become: yes
-  tags: ['burp_cert', 'never']
+
+- name: "Check if BurpSuiteCA.der already exists"
+  ansible.builtin.stat:
+    path: /usr/local/share/ca-certificates/BurpSuiteCA.der
+  register: burp_cert
+  tags: ['browser', 'burp_cert']
 
 - name: "Run getburpcert.sh to extract Burp CA cert"
   ansible.builtin.command: /usr/local/bin/getburpcert.sh
   register: burpcert_result
+  become: yes
   when: not burp_cert.stat.exists
-  tags: ['burp_cert', 'never']
+  tags: ['browser', 'burp_cert']
 
 - name: "Install extracted Burp CA cert system-wide"
   ansible.builtin.copy:
@@ -73,10 +73,10 @@
     remote_src: yes
   become: yes
   when: not burp_cert.stat.exists
-  tags: ['burp_cert', 'never']
+  tags: ['browser', 'burp_cert']
 
 - name: "Update CA certificates after Burp cert install"
   ansible.builtin.command: update-ca-certificates
   become: yes
   when: not burp_cert.stat.exists
-  tags: ['burp_cert', 'never']
+  tags: ['browser', 'burp_cert']
