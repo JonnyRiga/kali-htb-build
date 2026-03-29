@@ -65,6 +65,14 @@
     creates: "{{ opt_dir }}/ligolo-ng/agent.exe"
   become: yes
 
+- name: "Create ligolo-ng TUN interface"
+  ansible.builtin.command:
+    cmd: "ip tuntap add user {{ local_user }} mode tun ligolo"
+  become: yes
+  register: ligolo_tun
+  failed_when: ligolo_tun.rc != 0 and 'File exists' not in ligolo_tun.stderr
+  changed_when: ligolo_tun.rc == 0
+
 # --- PEASS-ng ---
 - name: "Create PEASS directory"
   ansible.builtin.file:
