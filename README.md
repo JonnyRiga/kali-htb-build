@@ -118,7 +118,7 @@ These tools have well-documented installation problems. Each one is handled expl
 ## Post-Run Steps
 
 1. **Log out and back in** — required for docker group membership and GOPATH changes
-2. **Burp CA cert** — start Burp Suite, then run: `ansible-playbook site.yml --tags burp_cert -K`
+2. **Burp CA cert** — start Burp Suite, then run: `cd ~/custom-kali-build && ansible-playbook site.yml --tags burp_cert -K`
 3. **Ligolo-ng TUN interface** — add on first use: `sudo ip tuntap add user $USER mode tun ligolo`
 4. **BloodHound CE credentials** — saved automatically to `/opt/bloodhound/server/initial-password.txt`
 
