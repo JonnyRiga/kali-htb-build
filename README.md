@@ -1,4 +1,4 @@
-# custom-kali-build
+# kali-htb-build
 
 Ansible playbook that provisions a fresh Kali Linux VM into a fully-loaded pentest workstation. Inspired by [IppSec's parrot-build](https://github.com/IppSec/parrot-build), rebuilt from the ground up for **Kali Linux Rolling** (XFCE / zsh).
 
@@ -39,8 +39,8 @@ If you're on Parrot, use IppSec's. If you're on Kali and want a one-command full
 ## Quick Start
 
 ```bash
-git clone https://github.com/JonnyRiga/custom-kali-build.git
-cd custom-kali-build
+git clone https://github.com/JonnyRiga/kali-htb-build.git
+cd kali-htb-build
 ./bootstrap.sh
 ```
 
@@ -123,7 +123,7 @@ Everything else (Burp CA cert, Ligolo-ng TUN interface, BloodHound CE, Firefox e
 ## File Structure
 
 ```
-custom-kali-build/
+kali-htb-build/
 ├── bootstrap.sh                # One-command setup for fresh VMs
 ├── site.yml                    # Main playbook entry point
 ├── requirements.yml            # Ansible Galaxy collection dependencies
