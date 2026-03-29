@@ -70,7 +70,7 @@
     cmd: "ip tuntap add user {{ local_user }} mode tun ligolo"
   become: yes
   register: ligolo_tun
-  failed_when: ligolo_tun.rc != 0 and 'File exists' not in ligolo_tun.stderr
+  failed_when: ligolo_tun.rc != 0 and 'File exists' not in ligolo_tun.stderr and 'Device or resource busy' not in ligolo_tun.stderr
   changed_when: ligolo_tun.rc == 0
 
 # --- PEASS-ng ---
