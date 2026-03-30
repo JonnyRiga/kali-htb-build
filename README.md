@@ -14,8 +14,8 @@ Ansible playbook that provisions a fresh Kali Linux VM into a fully-loaded pente
 | **Tool isolation** | Global installs | pipx virtualenvs for impacket, netexec, certipy-ad, bloodhound.py |
 | **BloodHound** | Legacy version | BloodHound CE via Docker Compose (auto-started, password saved) |
 | **Binary tools** | Compiled from source or manual | Pre-built binaries for kerbrute, chisel, ligolo-ng |
-| **Logging** | Included (configure-logging role) | ufw (SYN logging) + auditd + laurel structured audit logs |
-| **Idempotent** | Partial (skips installed items) | Fully idempotent — safe to re-run at any time |
+| **Logging** | Included (syslog + auditd + firewall logging) | ufw (SYN logging) + auditd + laurel structured audit logs |
+| **Idempotent** | Yes (skips completed tasks) | Fully idempotent — safe to re-run at any time |
 | **Selective runs** | All-or-nothing | Tag-based — run individual roles without touching the rest |
 | **Known issues doc** | Minimal | Explicit workarounds table for every tool with install problems |
 
